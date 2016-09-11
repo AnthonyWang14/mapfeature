@@ -92,10 +92,15 @@ print up.shape
 
 # output_Graph(X_train[0], raw_marginal_ssvm, 'pgm_input')
 
-Y_map = pystruct.inference.inference_ad3(
+# useful alg = bp,dd,trw,lf,alphaexp
+# other inference alg may need externalLibs in opengm
+inf_alg = 'bp'
+print inf_alg
+Y_map = pystruct.inference.inference_ogm(
             model._get_unary_potentials(X_train[0], raw_marginal_ssvm.w),
             model._get_pairwise_potentials(X_train[0], raw_marginal_ssvm.w),
-            X_train[0][1]
+            X_train[0][1],
+			alg=inf_alg
             )
 print Y_map
 exit()
