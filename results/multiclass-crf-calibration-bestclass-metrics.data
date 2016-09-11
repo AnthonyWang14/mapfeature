@@ -1,0 +1,6 @@
+uncalibrated	brier-score\0.230353
+uncalibrated	calibration-error\0.017397
+calibrated	brier-score\0.197401
+calibrated	calibration-error\0.001145
+one-vs-all	brier-score\0.204553
+one-vs-all	calibration-error\0.008888
