@@ -80,7 +80,7 @@ class CalibratedClassifier(BaseEstimator, ClassifierMixin):
         """ Assumes the model is already trained """  
         featurizer = self.featurizer
         featurizer.set_clf(self.clf)
-        print 'n_classes', self.n_classes
+        # print 'n_classes', self.n_classes
         if recalibrator:
             calibration_method = _CalibrationMethod(recalibrator)
         else:
@@ -255,7 +255,8 @@ class _Calibrator(object):
         self.n_classes = n_classes
 
     def _featurize(self, X, marginals=None):
-        return self.featurizer.featurize(X, marginals)
+        print "in _Calibrator, set map alg in featurlizer"
+        return self.featurizer.featurize(X, marginals, map_alg='trw')
 
     def _labelize(self, X, y):
         return self.featurizer.labelize(X, y)

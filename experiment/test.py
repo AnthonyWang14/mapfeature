@@ -23,6 +23,10 @@ from recal.recalibrators import CalibratedClassifier
 from recal.structured_learners import GraphCRFPredictor
 from recal.feature_extractors import AllMarginalsBestClassFeaturizer
 
+import sys
+# for my computer only..cause use anaconda.
+sys.path.append('/usr/local/lib/python2.7/site-packages')
+import datetime
 
 def output_Graph(X, trained_model, filename):
     model = trained_model.model
@@ -86,24 +90,21 @@ raw_marginal_ssvm = pickle.load(open('../models/edge_features_one_slack_trainval
 model = raw_marginal_ssvm.model
 graph_marginal_ssvm = GraphCRFPredictor(raw_marginal_ssvm, model)
 
-print len(raw_marginal_ssvm.w)
 up = np.exp(model._get_unary_potentials(X_train[1], raw_marginal_ssvm.w))
-print up.shape
 
 # output_Graph(X_train[0], raw_marginal_ssvm, 'pgm_input')
 
 # useful alg = bp,dd,trw,lf,alphaexp
 # other inference alg may need externalLibs in opengm
-inf_alg = 'bp'
-print inf_alg
+inf_alg = 'lf'
 Y_map = pystruct.inference.inference_ogm(
             model._get_unary_potentials(X_train[0], raw_marginal_ssvm.w),
             model._get_pairwise_potentials(X_train[0], raw_marginal_ssvm.w),
             X_train[0][1],
 			alg=inf_alg
             )
-print Y_map
-exit()
+
+
 # X_val, y_val = X_train[600:964], y_train[600:964]
 
 # ----------------------------------------------------------------------------
@@ -171,6 +172,7 @@ def _uncal(X_test, y_test, test_marginals):
 
 y_true_all = [list() for f in feature_groups]
 y_pred_all = [list() for f in feature_groups]
+running_time = [0. for f in feature_groups]
 
 for t in xrange(1):
     L = range(len(X_vt))
@@ -186,6 +188,7 @@ for t in xrange(1):
     Y_pred_test = [np.argmax(m,axis=1) for m in test_marginals]
     # print len(Y_pred_test[0])
     for i, features in enumerate(feature_groups):
+        starttime = datetime.datetime.now()
         if features == ['uncalibrated']:
             z, z_pred = _uncal(X_test, y_test, test_marginals)
         else:
@@ -193,10 +196,13 @@ for t in xrange(1):
             calibrated_featurizer = AllMarginalsBestClassFeaturizer(cal_ssvm)
             z = calibrated_featurizer.labelize(X_test, y_test, Y_best=Y_pred_test)
             z_pred = cal_ssvm.predict_proba(X_test, test_marginals)[:,1]
+        endtime = datetime.datetime.now()
+        running_time[i] = (endtime-starttime).seconds
+        print running_time[i], labels[i]
         y_true_all[i].extend(z)
         y_pred_all[i].extend(z_pred)
+        # exit()
 
-exit()
 with open(args.out_path + '/graph-crf-features-marginals-964val.data', 'w') as f:
     for y_true, y_pred, label in zip(y_true_all, y_pred_all, labels):
         f.write('%s\t%f\t%f\t%f\t%f' % (label, brier_score(y_pred, y_true), calibration_error(y_pred, y_true), sharpness(y_pred, y_true), accuracy(y_pred, y_true)))

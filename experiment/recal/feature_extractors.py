@@ -196,7 +196,7 @@ class AllMarginalsBestClassFeaturizer(object):
 	def set_clf(self, clf):
 		self.clf = clf
 	
-	def featurize(self, X, marginals=None):
+	def featurize(self, X, marginals=None, map_alg='ad3'):
 		assert self.clf is not None
 
 		F = list()
@@ -206,7 +206,7 @@ class AllMarginalsBestClassFeaturizer(object):
 
 		Y_map = None
 		if 'map-concordance' in self.features:
-			Y_map = self.clf.predict_map(X)
+			Y_map = self.clf.predict_map(X, map_alg)
 
 		if 'pseudomargins' in self.features:
 			pseudomarginals = self.clf.pseudomarginals(X, Y_map)

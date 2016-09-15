@@ -229,8 +229,11 @@ class GraphCRFPredictor(CRFPredictor):
 		return out
 		# return [np.argmax(self._marginals_via_gibbs(x),axis=1) for x in X]
 
-	def predict_map(self, X):
-		return [self._predict_via_dual_decomp(x) for x in X]
+	def predict_map(self, X, method='ad3'):
+		if method=='ad3':
+			return [self._predict_via_dual_decomp(x) for x in X]
+		else:
+			return [self._predict_via_ogm(x,method) for x in X]
 
 	def pseudomarginals(self, X, Y_map=None):
 		if not Y_map:
@@ -255,6 +258,13 @@ class GraphCRFPredictor(CRFPredictor):
 			x[1]
 		)
 
+	def _predict_via_ogm(self, x, method):
+		return pystruct.inference.inference_ogm(
+			self.model._get_unary_potentials(x, self.ssvm.w),
+			self.model._get_pairwise_potentials(x, self.ssvm.w),
+			x[1],
+			alg=method
+		)
 	def _predict(self, x):
 		return self._marginal_decoding(x)
 
@@ -552,7 +562,7 @@ def gibbs_sampling(U, P, edges, n_samples=15000, n_burn=10000, Y0=None):
 
 def pseudomarginals(U,P,edges,Y_map):
 	n_nodes, n_states = U.shape
-	print U.shape
+	# print U.shape
 	edge_potentials = { v : dict() for v in xrange(n_nodes) }
 	
 	for i, (v1, v2) in enumerate(edges):
